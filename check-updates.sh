@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-update-remotes ()
+update_remotes ()
 {
   if [[ "$#" -gt 0 ]]; then
     if [[ "$1" = "--check" ]]; then
@@ -8,42 +8,42 @@ update-remotes ()
       if [[ "$#" -gt 1 ]]; then
         shift
         for remote in "$@"; do
-          _check-remote $remote && (
-            has_updates="${has_updates} $remote"
-          )
+          if _check_remote $remote; then
+            has_updates+=" $remote"
+          fi 
         done
-        if [[ ! "$has_updates" = "" ]];
-          printf "UPDATES AVAILABLE FOR: %s" "$has_updates"
+        if [[ ! "$has_updates" = "" ]]; then
+          printf "%s%s\n" "UPDATES AVAILABLE FOR:" "$has_updates"
         fi
       fi
     else
       for remote in "$@"; do
-        _update-remote $remote
+        _update_remote $remote
       done
     fi
   fi
 }
 
-_update-remote ()
+_update_remote ()
 {
-  printf "Updating packages for %s...\n" "$1"
-  printf "> ssh %s sudo yum update -y\n" "$1"
-  printf "--------OUTPUT:--------\n"
+  printf "%s\n" "Updating packages for $1..."
+  printf "%s\n" "> ssh $1 sudo yum update -y"
+  printf "%s\n" "--------OUTPUT:--------"
 
   ssh "$1" sudo yum update -y
 }
 
-_check-remote ()
+_check_remote ()
 {
-  printf "Checking %s for updates...\n" $servername
-  printf "> ssh %s sudo yum -q check-update\n" $servername
+  printf "%s\n" "Checking $1 for updates..."
+  printf "%s\n" "> ssh $1 sudo yum -q check-update"
 
-  local output="$(ssh $servername sudo yum -q check-update)"
+  local output="$(ssh "$1" sudo yum -q check-update)"
   if [[ ! "$output" = "" ]]; then
-    printf "--------UPDATES:--------%s\n" $output
+    printf "%s%s\n\n" "--------UPDATES:--------" "$output"
     return 0
   else
-    printf "-------NO UPDATES-------\n\n"
+    printf "%s\n\n" "-------NO UPDATES-------"
     return 1
   fi
 }
